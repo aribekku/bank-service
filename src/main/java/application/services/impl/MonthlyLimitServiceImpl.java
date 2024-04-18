@@ -8,12 +8,23 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
 public class MonthlyLimitServiceImpl implements MonthlyLimitService {
 
     private final MonthlyLimitRepository limitRepository;
+
+    @Override
+    public List<MonthlyLimit> getAllLimits() {
+        return limitRepository.findAll();
+    }
+
+    @Override
+    public List<MonthlyLimit> getAllSetLimits() {
+        return limitRepository.findAllByTransactionNull();
+    }
 
     @Override
     public void setNewLimit(SetNewLimitDTO newLimitDTO) {
