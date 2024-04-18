@@ -23,6 +23,11 @@ public class TransactionServiceImpl implements TransactionService {
     private final CurrencyRateServiceImpl currencyRateServiceImpl;
 
     @Override
+    public List<Transaction> getAll() {
+        return transactionRepository.findAll();
+    }
+
+    @Override
     public List<GetTransactionDTO> getTransactionsExceededLimit() {
         List<MonthlyLimit> limitsExceeded = limitRepository.findAllByLimitExceeded(true);
         List<GetTransactionDTO> transactions = new ArrayList<>();
