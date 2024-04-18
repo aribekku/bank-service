@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
+import java.util.NoSuchElementException;
 
 @Service
 public class CurrencyRateServiceImpl implements CurrencyRateService {
@@ -43,17 +44,25 @@ public class CurrencyRateServiceImpl implements CurrencyRateService {
 
             LinkedHashMap<String, Double> rates = response.getRates();
 
-            CurrencyRate currencyRate = new CurrencyRate();
+            if (rates != null) {
+                if (rates.containsKey(currency)) {
+                    CurrencyRate currencyRate = new CurrencyRate();
+                    currencyRate.setId(generator);
+                    currencyRate.setCurrency(currency);
+                    currencyRate.setRate(rates.get(currency));
+                    currencyRate.setCreated();
 
-            currencyRate.setId(generator);
-            currencyRate.setCurrency(currency);
-            currencyRate.setRate(rates.get(currency));
-            currencyRate.setCreated();
-
-            currencyRateRepository.save(currencyRate);
-            rate = rates.get(currency);
+                    currencyRateRepository.save(currencyRate);
+                    rate = rates.get(currency);
+                }
+                else {
+                    throw new NoSuchElementException("Such currency does not exist!");
+                }
+            }
+            else {
+                throw new NullPointerException("Currency rates are not available");
+            }
         }
-
         return rate;
     }
 }
