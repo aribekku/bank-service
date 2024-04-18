@@ -27,7 +27,7 @@ public class MonthlyLimitServiceImpl implements MonthlyLimitService {
             newLimit.setLimitBalance(newLimitDTO.getLimit());
         }
         else {
-            Double limitBalance = newLimitDTO.getLimit() - (previousLimit.getLimitAmount() - previousLimit.getLimitBalance());
+            Double limitBalance = Math.round((newLimitDTO.getLimit() - (previousLimit.getLimitAmount() - previousLimit.getLimitBalance()))*100)/100.0;
             newLimit.setLimitBalance(limitBalance);
         }
 
