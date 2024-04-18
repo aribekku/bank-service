@@ -22,4 +22,14 @@ public class MonthlyLimitController {
         return ResponseEntity.ok("New limit was successfully created!");
     }
 
+    @GetMapping
+    public ResponseEntity<?> getAll() {
+        return ResponseEntity.ok(limitService.getAllLimits());
+    }
+
+    @GetMapping("/set")
+    public ResponseEntity<?> getAllSetLimits() {
+        return ResponseEntity.ok(limitService.getAllSetLimits());
+    }
+
 }
