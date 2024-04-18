@@ -25,6 +25,11 @@ public class TransactionController {
     }
 
     @GetMapping
+    public ResponseEntity<?> getAll() {
+        return ResponseEntity.ok(transactionService.getAll());
+    }
+
+    @GetMapping("/limit-exceeded")
     public ResponseEntity<?> getTransactionsExceededLimit() {
         return ResponseEntity.ok(transactionService.getTransactionsExceededLimit());
     }
