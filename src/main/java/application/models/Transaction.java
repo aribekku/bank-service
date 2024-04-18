@@ -20,5 +20,4 @@ public class Transaction extends BaseEntity {
 
     private Double sum;
 
-    private String expenseCategory;
 }
