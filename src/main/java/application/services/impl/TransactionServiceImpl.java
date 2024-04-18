@@ -20,6 +20,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final MonthlyLimitRepository limitRepository;
+    private final CurrencyRateServiceImpl currencyRateServiceImpl;
 
     @Override
     public List<GetTransactionDTO> getTransactionsExceededLimit() {
@@ -57,29 +58,29 @@ public class TransactionServiceImpl implements TransactionService {
 
         transactionRepository.save(transaction);
 
+        Double rate = currencyRateServiceImpl.getCurrencyRate(transactionDTO.getCurrencyShortName());
+
         MonthlyLimit previousLimit = limitRepository.findFirstByExpenseCategoryOrderByCreatedDesc(transactionDTO.getExpenseCategory());
 
         MonthlyLimit limit = new MonthlyLimit();
 
         if (previousLimit == null) {
-            limit.setLimitAmount(1000D);
+            limit.setLimitAmount(1000.0);
             limit.setCurrencyShortName("USD");
-            limit.setLimitBalance((limit.getLimitAmount() - transaction.getSum()) * 100 / 100);
+            limit.setLimitBalance(Math.round((limit.getLimitAmount() - (transaction.getSum()) / rate)*100)/100.0);
             limit.setLimitSettingDate(LocalDateTime.now());
         }
         else {
             limit.setLimitAmount(previousLimit.getLimitAmount());
-            limit.setLimitBalance((previousLimit.getLimitBalance() - transaction.getSum()) * 100 / 100);
-            limit.setCurrencyShortName(transactionDTO.getCurrencyShortName());
+            limit.setLimitBalance(Math.round((previousLimit.getLimitBalance() - (transaction.getSum())/rate)*100)/100.0);
+            limit.setCurrencyShortName(previousLimit.getCurrencyShortName());
             limit.setLimitSettingDate(previousLimit.getLimitSettingDate());
         }
 
         limit.setExpenseCategory(transactionDTO.getExpenseCategory());
         limit.setTransaction(transaction);
 
-        if (limit.getLimitBalance() < 0) {
-            limit.setLimitExceeded(true);
-        }
+        limit.setLimitExceeded(limit.getLimitBalance() < 0);
 
         limitRepository.save(limit);
     }
