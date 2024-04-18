@@ -2,6 +2,7 @@ package application.controllers;
 
 import application.DTO.SetNewLimitDTO;
 import application.services.MonthlyLimitService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -16,8 +17,9 @@ public class MonthlyLimitController {
     }
 
     @PostMapping()
-    public void setNewLimit(@RequestBody SetNewLimitDTO newLimitDTO) {
+    public ResponseEntity<?> setNewLimit(@RequestBody SetNewLimitDTO newLimitDTO) {
         limitService.setNewLimit(newLimitDTO);
+        return ResponseEntity.ok("New limit was successfully created!");
     }
 
 }

@@ -3,6 +3,7 @@ package application.controllers;
 import application.DTO.CreateTransactionDTO;
 import application.DTO.GetTransactionDTO;
 import application.services.TransactionService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,12 +19,13 @@ public class TransactionController {
     }
 
     @PostMapping
-    public void createTransaction(@RequestBody CreateTransactionDTO transactionDTO) {
+    public ResponseEntity<?> createTransaction(@RequestBody CreateTransactionDTO transactionDTO) {
         transactionService.save(transactionDTO);
+        return ResponseEntity.ok("Transaction was successfully created!");
     }
 
     @GetMapping
-    public List<GetTransactionDTO> getTransactionsExceededLimit() {
-        return transactionService.getTransactionsExceededLimit();
+    public ResponseEntity<?> getTransactionsExceededLimit() {
+        return ResponseEntity.ok(transactionService.getTransactionsExceededLimit());
     }
 }
