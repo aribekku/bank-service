@@ -10,7 +10,7 @@ public class UUIDGenerator<TEntity> {
         String id = UUID.randomUUID().toString();
 
         return switch (tEntity.getClass().getSimpleName()) {
-            case "CurrencyRate" -> id;
+            case "CurrencyRate" -> id + "_CURRENCY_RATE";
             default -> throw new IllegalArgumentException();
         };
     }
