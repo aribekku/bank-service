@@ -22,8 +22,7 @@ public abstract class BaseEntity {
     private Boolean isDeleted;
 
     @PrePersist
-    public void setCreate()
-    {
+    public void setCreate() {
         this.created = LocalDateTime.now();
     }
 }
