@@ -1,9 +1,7 @@
 CREATE TABLE limits
 (
     "id"                        SERIAL              NOT NULL,
-
     "created"                   TIMESTAMPTZ         NOT NULL,
-    "is_deleted"                BOOLEAN             DEFAULT FALSE,
 
     "limit_setting_date"        TIMESTAMPTZ         DEFAULT NULL,
     "limit_amount"              DOUBLE PRECISION    NOT NULL,
