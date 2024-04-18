@@ -19,7 +19,6 @@ public abstract class BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private LocalDateTime created;
-    private Boolean isDeleted;
 
     @PrePersist
     public void setCreate() {
