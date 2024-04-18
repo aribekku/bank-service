@@ -8,6 +8,6 @@ import java.util.List;
 public interface MonthlyLimitRepository extends JpaRepository<MonthlyLimit, Long> {
 
     MonthlyLimit findFirstByExpenseCategoryOrderByCreatedDesc(String category);
-
     List<MonthlyLimit> findAllByLimitExceeded(Boolean exceeded);
+    List<MonthlyLimit> findAllByTransactionNull();
 }
