@@ -47,19 +47,20 @@ public class TransactionServiceImpl implements TransactionService {
                     .build();
 
             transactions.add(transactionDTO);
-
         }
+
         return transactions;
     }
 
     @Override
     public void save(CreateTransactionDTO transactionDTO) {
-        Transaction transaction = new Transaction();
-
-        transaction.setAccountFrom(transactionDTO.getAccountFrom());
-        transaction.setAccountTo(transactionDTO.getAccountTo());
-        transaction.setCurrencyShortName(transactionDTO.getCurrencyShortName());
-        transaction.setSum(transactionDTO.getSum());
+        Transaction transaction = Transaction
+                                            .builder()
+                                            .accountFrom(transactionDTO.getAccountFrom())
+                                            .accountTo(transactionDTO.getAccountTo())
+                                            .currencyShortName(transactionDTO.getCurrencyShortName())
+                                            .sum(transactionDTO.getSum())
+                                            .build();
 
         transactionRepository.save(transaction);
 
