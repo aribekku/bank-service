@@ -72,7 +72,7 @@ public class TransactionServiceTest {
 
         MonthlyLimit capturedLimit = limitCaptor.getValue();
 
-        Assertions.assertEquals(false, capturedLimit.getLimitExceeded());
+        Assertions.assertFalse(capturedLimit.isLimitExceeded());
     }
 
     @Test
@@ -114,7 +114,7 @@ public class TransactionServiceTest {
 
         MonthlyLimit capturedLimit = limitCaptor.getValue();
 
-        Assertions.assertEquals(true, capturedLimit.getLimitExceeded());
+        Assertions.assertTrue(capturedLimit.isLimitExceeded());
     }
 
     @Test
@@ -140,7 +140,7 @@ public class TransactionServiceTest {
 
         MonthlyLimit capturedLimit = limitCaptor.getValue();
 
-        Assertions.assertEquals(false, capturedLimit.getLimitExceeded());
+        Assertions.assertFalse(capturedLimit.isLimitExceeded());
     }
 
     @Test
@@ -166,7 +166,7 @@ public class TransactionServiceTest {
 
         MonthlyLimit capturedLimit = limitCaptor.getValue();
 
-        Assertions.assertEquals(true, capturedLimit.getLimitExceeded());
+        Assertions.assertTrue(capturedLimit.isLimitExceeded());
     }
 
     @Test

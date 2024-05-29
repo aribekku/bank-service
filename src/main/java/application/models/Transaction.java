@@ -12,12 +12,12 @@ import lombok.*;
 @Table(name = "transactions")
 public class Transaction extends BaseEntity {
 
-    private Long accountFrom;
+    private long accountFrom;
 
-    private Long accountTo;
+    private long accountTo;
 
     private String currencyShortName;
 
-    private Double sum;
+    private double sum;
 
 }

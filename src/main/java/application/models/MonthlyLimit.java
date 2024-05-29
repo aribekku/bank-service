@@ -15,9 +15,9 @@ public class MonthlyLimit extends BaseEntity {
 
     private LocalDateTime limitSettingDate;
 
-    private Double limitAmount;
+    private double limitAmount;
 
-    private Double limitBalance;
+    private double limitBalance;
 
     private String currencyShortName;
 
@@ -26,6 +26,6 @@ public class MonthlyLimit extends BaseEntity {
     @OneToOne
     private Transaction transaction;
 
-    private Boolean limitExceeded;
+    private boolean limitExceeded;
 
 }

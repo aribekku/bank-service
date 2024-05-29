@@ -17,7 +17,7 @@ public class CurrencyRate {
     private String id;
     private LocalDateTime created;
     private String currency;
-    private Double rate;
+    private double rate;
 
     public void setId(UUIDGenerator<CurrencyRate> generator) {
         this.id = generator.generate(this);

@@ -31,7 +31,7 @@ public class MonthlyLimitServiceImpl implements MonthlyLimitService {
         MonthlyLimit previousLimit = limitRepository.findFirstByExpenseCategoryOrderByCreatedDesc(
                                                                                     newLimitDTO.getExpenseCategory());
 
-        Double newLimitAmount = newLimitDTO.getLimit();
+        double newLimitAmount = newLimitDTO.getLimit();
         MonthlyLimit newLimit = new MonthlyLimit();
         newLimit.setLimitSettingDate(LocalDateTime.now());
         newLimit.setLimitAmount(newLimitAmount);
@@ -40,9 +40,9 @@ public class MonthlyLimitServiceImpl implements MonthlyLimitService {
             newLimit.setLimitBalance(newLimitAmount);
         }
         else {
-            Double previousLimitAmount = previousLimit.getLimitAmount();
-            Double previousLimitBalance = previousLimit.getLimitBalance();
-            Double limitBalance = Math.round((newLimitAmount - (previousLimitAmount - previousLimitBalance))*100)/100.0;
+            double previousLimitAmount = previousLimit.getLimitAmount();
+            double previousLimitBalance = previousLimit.getLimitBalance();
+            double limitBalance = Math.round((newLimitAmount - (previousLimitAmount - previousLimitBalance))*100)/100.0;
             newLimit.setLimitBalance(limitBalance);
         }
 
