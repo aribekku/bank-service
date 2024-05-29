@@ -62,11 +62,10 @@ public class TransactionServiceImpl implements TransactionService {
                                             .sum(transactionDTO.getSum())
                                             .build();
 
-        transactionRepository.save(transaction);
-
         Double rate = currencyRateServiceImpl.getCurrencyRate(transactionDTO.getCurrencyShortName());
 
-        MonthlyLimit previousLimit = limitRepository.findFirstByExpenseCategoryOrderByCreatedDesc(transactionDTO.getExpenseCategory());
+        MonthlyLimit previousLimit = limitRepository.findFirstByExpenseCategoryOrderByCreatedDesc(
+                                                                                transactionDTO.getExpenseCategory());
 
         MonthlyLimit limit = new MonthlyLimit();
 
@@ -88,6 +87,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         limit.setLimitExceeded(limit.getLimitBalance() < 0);
 
+        transactionRepository.save(transaction);
         limitRepository.save(limit);
     }
 }

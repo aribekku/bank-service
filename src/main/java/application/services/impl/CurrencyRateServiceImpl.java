@@ -1,28 +1,26 @@
 package application.services.impl;
 
 import application.models.CurrencyRate;
-import application.models.Response;
 import application.repositories.CurrencyRateRepository;
 import application.services.CurrencyRateService;
 import application.utils.UUIDGenerator;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.NoSuchElementException;
 
 @Service
 public class CurrencyRateServiceImpl implements CurrencyRateService {
     private final CurrencyRateRepository currencyRateRepository;
-    private final WebClient webClient;
     private final UUIDGenerator generator;
 
     @Autowired
-    public CurrencyRateServiceImpl(CurrencyRateRepository currencyRateRepository, WebClient.Builder webClientBuilder, UUIDGenerator generator) {
+    public CurrencyRateServiceImpl(CurrencyRateRepository currencyRateRepository, UUIDGenerator generator) {
         this.currencyRateRepository = currencyRateRepository;
-        this.webClient = webClientBuilder.baseUrl("https://openexchangerates.org").build();
         this.generator = generator;
     }
 
@@ -32,37 +30,42 @@ public class CurrencyRateServiceImpl implements CurrencyRateService {
         Double rate;
 
         if (currencyRateRepository.existsByCurrencyAndCreatedAfter(currency, LocalDateTime.now().minusDays(1))) {
-            CurrencyRate currencyRate = currencyRateRepository.findByCurrencyAndCreatedAfter(currency, LocalDateTime.now().minusDays(1));
+            CurrencyRate currencyRate = currencyRateRepository.findByCurrencyAndCreatedAfter(
+                                                                            currency, LocalDateTime.now().minusDays(1));
             rate = currencyRate.getRate();
         }
         else {
-            Response response = webClient
-                    .get()
-                    .uri("/api/latest.json?app_id=87ddf0ba0ca34854aa9aef7e7f1b018d")
-                    .retrieve()
-                    .bodyToMono(Response.class).block();
 
-            LinkedHashMap<String, Double> rates = response.getRates();
+            try {
+                OkHttpClient client = new OkHttpClient();
 
-            if (rates != null) {
-                if (rates.containsKey(currency)) {
-                    CurrencyRate currencyRate = new CurrencyRate();
-                    currencyRate.setId(generator);
-                    currencyRate.setCurrency(currency);
-                    currencyRate.setRate(rates.get(currency));
-                    currencyRate.setCreated();
+                Request request = new Request.Builder()
+                        .url("https://openexchangerates.org/api/latest.json?app_id=87ddf0ba0ca34854aa9aef7e7f1b018d")
+                        .get()
+                        .addHeader("accept", "application/json")
+                        .build();
 
-                    currencyRateRepository.save(currencyRate);
-                    rate = rates.get(currency);
-                }
-                else {
-                    throw new NoSuchElementException("Such currency does not exist!");
-                }
-            }
-            else {
-                throw new NullPointerException("Currency rates are not available");
+                Response response = client.newCall(request).execute();
+
+                String stringResponse = response.body().string();
+                JSONObject jsonObject = new JSONObject(stringResponse);
+                JSONObject ratesObject = jsonObject.getJSONObject("rates");
+
+                rate = ratesObject.getDouble(currency.toUpperCase());
+
+                CurrencyRate currencyRate = new CurrencyRate();
+                currencyRate.setId(generator);
+                currencyRate.setCurrency(currency);
+                currencyRate.setRate(rate);
+                currencyRate.setCreated();
+
+                currencyRateRepository.save(currencyRate);
+
+            } catch (Exception exception) {
+                throw new JSONException(exception.getMessage());
             }
         }
+
         return rate;
     }
 }
