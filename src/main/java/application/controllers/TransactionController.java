@@ -22,7 +22,7 @@ public class TransactionController {
     @PostMapping
     @Operation(summary = "Endpoint for saving transaction to database")
     public ResponseEntity<?> createTransaction(@RequestBody CreateTransactionDTO transactionDTO) {
-        transactionService.save(transactionDTO);
+        transactionService.create(transactionDTO);
         return ResponseEntity.ok("Transaction was successfully created!");
     }
 
