@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter @Setter
 @AllArgsConstructor
 public class CreateTransactionDTO {
@@ -20,7 +22,7 @@ public class CreateTransactionDTO {
 
     @NotEmpty
     @Min(1)
-    private Double sum;
+    private BigDecimal sum;
 
     @NotBlank(message = "Expense category is required")
     private String expenseCategory;
