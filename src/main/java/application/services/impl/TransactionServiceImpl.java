@@ -15,6 +15,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -37,63 +38,86 @@ public class TransactionServiceImpl implements TransactionService {
         List<Transaction> limitExceededTransactions = transactionRepository.findAllByLimitExceeded(true);
 
         for (Transaction transaction : limitExceededTransactions) {
-            GetTransactionDTO transactionDTO = GetTransactionDTO
-                    .builder()
-                    .accountFrom(transaction.getAccountFrom())
-                    .accountTo(transaction.getAccountTo())
-                    .currencyShortName(transaction.getCurrencyShortName())
-                    .sum(transaction.getSum())
-                    .expenseCategory(transaction.getExpenseCategory())
-                    .transactionDateTime(transaction.getCreated())
-                    .limitSum(transaction.getLimit().getLimitAmount())
-                    .limitDateTime(transaction.getLimit().getLimitSettingDate())
-                    .limitCurrencyShortName(transaction.getLimit().getCurrencyShortName())
-                    .build();
-
+            GetTransactionDTO transactionDTO = mapToDTO(transaction);
             transactions.add(transactionDTO);
         }
 
         return transactions;
     }
 
+    private GetTransactionDTO mapToDTO(Transaction transaction) {
+        return GetTransactionDTO
+                .builder()
+                .accountFrom(transaction.getAccountFrom())
+                .accountTo(transaction.getAccountTo())
+                .currencyShortName(transaction.getCurrencyShortName())
+                .sum(transaction.getSum())
+                .expenseCategory(transaction.getExpenseCategory())
+                .transactionDateTime(transaction.getCreated())
+                .limitSum(transaction.getLimit().getLimitAmount())
+                .limitDateTime(transaction.getLimit().getLimitSettingDate())
+                .limitCurrencyShortName(transaction.getLimit().getCurrencyShortName())
+                .build();
+    }
+
     @Override
     public void create(CreateTransactionDTO transactionDTO) {
+        Transaction transaction = mapToTransaction(transactionDTO);
+
+        BigDecimal rate = getCurrencyRate(transactionDTO.getCurrencyShortName());
+
+        Optional<MonthlyLimit> previousLimit = limitRepository.findByExpenseCategoryAndActive(transactionDTO.getExpenseCategory(), true);
+        MonthlyLimit limit = createLimit(transactionDTO, previousLimit, rate);
+
+        transaction.setLimit(limit);
+        transaction.setLimitExceeded(limit.getLimitBalance().compareTo(BigDecimal.ZERO) < 0);
+
+        limitRepository.save(limit);
+        transactionRepository.save(transaction);
+    }
+
+    private Transaction mapToTransaction(CreateTransactionDTO transactionDTO) {
         Transaction transaction = new Transaction();
         transaction.setAccountFrom(transactionDTO.getAccountFrom());
         transaction.setAccountTo(transactionDTO.getAccountTo());
         transaction.setCurrencyShortName(transactionDTO.getCurrencyShortName());
         transaction.setSum(transactionDTO.getSum());
         transaction.setExpenseCategory(transactionDTO.getExpenseCategory());
+        return transaction;
+    }
 
-        double rate = currencyRateServiceImpl.getCurrencyRate(transactionDTO.getCurrencyShortName());
-
-        MonthlyLimit previousLimit = limitRepository.findFirstByExpenseCategoryOrderByLimitSettingDateDesc(
-                                                                                transactionDTO.getExpenseCategory());
+    private MonthlyLimit createLimit(CreateTransactionDTO transactionDTO, Optional<MonthlyLimit> previousLimitOpt, BigDecimal rate) {
         MonthlyLimit limit = new MonthlyLimit();
 
-        if (previousLimit == null) {
+        BigDecimal convertedSum = transactionDTO.getSum()
+                .divide(rate, 2, RoundingMode.HALF_UP);
+
+        if (previousLimitOpt.isEmpty()) {
             limit.setLimitAmount(new BigDecimal(1000));
             limit.setCurrencyShortName("USD");
-            BigDecimal convertedSum = transaction.getSum().divide(BigDecimal.valueOf(rate), 2, RoundingMode.HALF_UP);
-            BigDecimal roundedLimitBalance = ((limit.getLimitAmount().subtract(convertedSum)));
-            limit.setLimitBalance(roundedLimitBalance);
+            limit.setLimitBalance((limit.getLimitAmount().subtract(convertedSum)));
             limit.setLimitSettingDate(LocalDateTime.now());
         }
         else {
+            MonthlyLimit previousLimit = previousLimitOpt.get();
             limit.setLimitAmount(previousLimit.getLimitAmount());
-            BigDecimal convertedSum = transaction.getSum().divide(BigDecimal.valueOf(rate), 2, RoundingMode.HALF_UP);
-            BigDecimal roundedLimitBalance = ((previousLimit.getLimitBalance().subtract(convertedSum)));
-            limit.setLimitBalance(roundedLimitBalance);
+            limit.setLimitBalance((previousLimit.getLimitBalance().subtract(convertedSum)));
             limit.setCurrencyShortName(previousLimit.getCurrencyShortName());
             limit.setLimitSettingDate(previousLimit.getLimitSettingDate());
+            previousLimit.setActive(false);
         }
 
+        limit.setActive(true);
         limit.setExpenseCategory(transactionDTO.getExpenseCategory());
 
-        limitRepository.save(limit);
+        return limit;
+    }
 
-        transaction.setLimit(limit);
-        transaction.setLimitExceeded(limit.getLimitBalance().compareTo(BigDecimal.ZERO) < 0);
-        transactionRepository.save(transaction);
+    private BigDecimal getCurrencyRate(String currencyShortName) {
+        BigDecimal rate = currencyRateServiceImpl.getCurrencyRate(currencyShortName);
+        if (rate == null || rate.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Invalid currency rate");
+        }
+        return rate;
     }
 }
