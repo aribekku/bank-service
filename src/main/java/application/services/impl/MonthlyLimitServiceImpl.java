@@ -7,6 +7,8 @@ import application.services.MonthlyLimitService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,16 +24,11 @@ public class MonthlyLimitServiceImpl implements MonthlyLimitService {
     }
 
     @Override
-    public List<MonthlyLimit> getAllSetLimits() {
-        return limitRepository.findAllByTransactionNull();
-    }
-
-    @Override
     public void setNewLimit(SetNewLimitDTO newLimitDTO) {
-        MonthlyLimit previousLimit = limitRepository.findFirstByExpenseCategoryOrderByCreatedDesc(
+        MonthlyLimit previousLimit = limitRepository.findFirstByExpenseCategoryOrderByLimitSettingDateDesc(
                                                                                     newLimitDTO.getExpenseCategory());
 
-        double newLimitAmount = newLimitDTO.getLimit();
+        BigDecimal newLimitAmount = newLimitDTO.getLimit();
         MonthlyLimit newLimit = new MonthlyLimit();
         newLimit.setLimitSettingDate(LocalDateTime.now());
         newLimit.setLimitAmount(newLimitAmount);
@@ -40,10 +37,10 @@ public class MonthlyLimitServiceImpl implements MonthlyLimitService {
             newLimit.setLimitBalance(newLimitAmount);
         }
         else {
-            double previousLimitAmount = previousLimit.getLimitAmount();
-            double previousLimitBalance = previousLimit.getLimitBalance();
-            double limitBalance = Math.round((newLimitAmount - (previousLimitAmount - previousLimitBalance))*100)/100.0;
-            newLimit.setLimitBalance(limitBalance);
+            BigDecimal previousLimitAmount = previousLimit.getLimitAmount();
+            BigDecimal previousLimitBalance = previousLimit.getLimitBalance();
+            BigDecimal roundedLimitBalance = ((newLimitAmount.subtract(previousLimitAmount.subtract(previousLimitBalance)).setScale(2, RoundingMode.HALF_UP)));
+            newLimit.setLimitBalance(roundedLimitBalance);
         }
 
         newLimit.setCurrencyShortName("USD");
