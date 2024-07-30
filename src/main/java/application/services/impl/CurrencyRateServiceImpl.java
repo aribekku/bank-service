@@ -10,7 +10,11 @@ import com.squareup.okhttp.Response;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 @Service
@@ -18,53 +22,70 @@ public class CurrencyRateServiceImpl implements CurrencyRateService {
     private final CurrencyRateRepository currencyRateRepository;
     private final UUIDGenerator generator;
 
+    private final OkHttpClient httpClient;
+    private final Clock clock;
+
+    @Value("${currency.api.url}")
+    private String apiUrl;
+
     @Autowired
-    public CurrencyRateServiceImpl(CurrencyRateRepository currencyRateRepository, UUIDGenerator generator) {
+    public CurrencyRateServiceImpl(CurrencyRateRepository currencyRateRepository, UUIDGenerator generator, OkHttpClient httpClient, Clock clock) {
         this.currencyRateRepository = currencyRateRepository;
         this.generator = generator;
+        this.httpClient = httpClient;
+        this.clock = clock;
     }
 
     @Override
-    public double getCurrencyRate(String currency) {
+    public BigDecimal getCurrencyRate(String currency) {
 
-        double rate;
+        BigDecimal rate;
 
         if (currencyRateRepository.existsByCurrencyAndCreatedAfter(currency, LocalDateTime.now().minusDays(1))) {
-            CurrencyRate currencyRate = currencyRateRepository.findTopByCurrencyOrderByCreatedDesc(currency).orElse(new CurrencyRate());
+            CurrencyRate currencyRate = currencyRateRepository.findTopByCurrencyOrderByCreatedDesc(currency)
+                    .orElseThrow(() -> new IllegalStateException("Currency rate not found"));
             rate = currencyRate.getRate();
         }
         else {
 
-            try {
-                OkHttpClient client = new OkHttpClient();
-
-                Request request = new Request.Builder()
-                        .url("https://openexchangerates.org/api/latest.json?app_id=87ddf0ba0ca34854aa9aef7e7f1b018d")
-                        .get()
-                        .addHeader("accept", "application/json")
-                        .build();
-
-                Response response = client.newCall(request).execute();
-
-                String stringResponse = response.body().string();
-                JSONObject jsonObject = new JSONObject(stringResponse);
-                JSONObject ratesObject = jsonObject.getJSONObject("rates");
-
-                rate = ratesObject.getDouble(currency.toUpperCase());
-
-                CurrencyRate currencyRate = new CurrencyRate();
-                currencyRate.setId(generator);
-                currencyRate.setCurrency(currency);
-                currencyRate.setRate(rate);
-                currencyRate.setCreated();
-
-                currencyRateRepository.save(currencyRate);
-
-            } catch (Exception exception) {
-                throw new JSONException(exception.getMessage());
-            }
+            rate = fetchAndSaveCurrencyRate(currency);
         }
 
         return rate;
+    }
+
+    private BigDecimal fetchAndSaveCurrencyRate(String currency) {
+        try {
+            Request request = new Request.Builder()
+                    .url(apiUrl)
+                    .get()
+                    .addHeader("accept", "application/json")
+                    .build();
+
+            Response response = httpClient.newCall(request).execute();
+
+            if (!response.isSuccessful()) {
+                throw new RuntimeException("Failed to fetch currency rate");
+            }
+
+            String stringResponse = response.body().string();
+            JSONObject jsonObject = new JSONObject(stringResponse);
+            JSONObject ratesObject = jsonObject.getJSONObject("rates");
+
+            BigDecimal rate = ratesObject.getBigDecimal(currency.toUpperCase());
+
+            CurrencyRate currencyRate = new CurrencyRate();
+            currencyRate.setId(generator);
+            currencyRate.setCurrency(currency);
+            currencyRate.setRate(rate);
+            currencyRate.setCreated(LocalDateTime.now(clock));
+
+            currencyRateRepository.save(currencyRate);
+
+            return rate;
+
+        } catch (Exception exception) {
+            throw new JSONException(exception.getMessage());
+        }
     }
 }
