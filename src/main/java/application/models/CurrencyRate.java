@@ -4,6 +4,7 @@ import application.utils.UUIDGenerator;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 
@@ -17,7 +18,7 @@ public class CurrencyRate {
     private String id;
     private LocalDateTime created;
     private String currency;
-    private double rate;
+    private BigDecimal rate;
 
     public void setId(UUIDGenerator<CurrencyRate> generator) {
         this.id = generator.generate(this);
