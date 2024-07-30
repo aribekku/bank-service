@@ -1,6 +1,8 @@
 package application.services;
 
+import java.math.BigDecimal;
+
 public interface CurrencyRateService {
 
-    Double getCurrencyRate(String currency);
+    double getCurrencyRate(String currency);
 }

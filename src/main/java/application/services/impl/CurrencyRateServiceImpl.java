@@ -25,13 +25,12 @@ public class CurrencyRateServiceImpl implements CurrencyRateService {
     }
 
     @Override
-    public Double getCurrencyRate(String currency) {
+    public double getCurrencyRate(String currency) {
 
-        Double rate;
+        double rate;
 
         if (currencyRateRepository.existsByCurrencyAndCreatedAfter(currency, LocalDateTime.now().minusDays(1))) {
-            CurrencyRate currencyRate = currencyRateRepository.findByCurrencyAndCreatedAfter(
-                                                                            currency, LocalDateTime.now().minusDays(1));
+            CurrencyRate currencyRate = currencyRateRepository.findTopByCurrencyOrderByCreatedDesc(currency).orElse(new CurrencyRate());
             rate = currencyRate.getRate();
         }
         else {
