@@ -4,5 +4,5 @@ import java.math.BigDecimal;
 
 public interface CurrencyRateService {
 
-    double getCurrencyRate(String currency);
+    BigDecimal getCurrencyRate(String currency);
 }
