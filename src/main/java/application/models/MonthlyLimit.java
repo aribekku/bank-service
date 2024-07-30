@@ -23,4 +23,6 @@ public class MonthlyLimit extends BaseEntity {
     private String currencyShortName;
 
     private String expenseCategory;
+
+    private boolean active;
 }
