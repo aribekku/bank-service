@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Builder
@@ -19,13 +20,13 @@ public class GetTransactionDTO {
 
     private String currencyShortName;
 
-    private Double sum;
+    private BigDecimal sum;
 
     private String expenseCategory;
 
     private LocalDateTime transactionDateTime;
 
-    private Double limitSum;
+    private BigDecimal limitSum;
 
     private LocalDateTime limitDateTime;
 
