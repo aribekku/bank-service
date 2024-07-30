@@ -6,13 +6,15 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @AllArgsConstructor
 public class SetNewLimitDTO {
 
     @Min(value = 1, message = "Limit sum can not be 0 or less")
-    private Double limit;
+    private BigDecimal limit;
 
     @NotBlank(message = "Expense category is required")
     private String expenseCategory;
