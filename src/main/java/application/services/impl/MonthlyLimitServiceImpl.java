@@ -8,9 +8,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -25,26 +25,26 @@ public class MonthlyLimitServiceImpl implements MonthlyLimitService {
 
     @Override
     public void setNewLimit(SetNewLimitDTO newLimitDTO) {
-        MonthlyLimit previousLimit = limitRepository.findFirstByExpenseCategoryOrderByLimitSettingDateDesc(
-                                                                                    newLimitDTO.getExpenseCategory());
 
-        BigDecimal newLimitAmount = newLimitDTO.getLimit();
+        if (newLimitDTO.getLimit() == null || newLimitDTO.getLimit().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Limit amount must be positive.");
+        }
+
+        String expenseCategory = newLimitDTO.getExpenseCategory();
+        Optional<MonthlyLimit> activeLimitOpt = limitRepository.findByExpenseCategoryAndActive(expenseCategory, true);
+
+        activeLimitOpt.ifPresent(activeLimit -> {
+            activeLimit.setActive(false);
+            limitRepository.save(activeLimit);
+        });
+
         MonthlyLimit newLimit = new MonthlyLimit();
         newLimit.setLimitSettingDate(LocalDateTime.now());
-        newLimit.setLimitAmount(newLimitAmount);
-
-        if (previousLimit == null) {
-            newLimit.setLimitBalance(newLimitAmount);
-        }
-        else {
-            BigDecimal previousLimitAmount = previousLimit.getLimitAmount();
-            BigDecimal previousLimitBalance = previousLimit.getLimitBalance();
-            BigDecimal roundedLimitBalance = ((newLimitAmount.subtract(previousLimitAmount.subtract(previousLimitBalance)).setScale(2, RoundingMode.HALF_UP)));
-            newLimit.setLimitBalance(roundedLimitBalance);
-        }
-
+        newLimit.setLimitAmount(newLimitDTO.getLimit());
+        newLimit.setLimitBalance(newLimitDTO.getLimit());
         newLimit.setCurrencyShortName("USD");
         newLimit.setExpenseCategory(newLimitDTO.getExpenseCategory());
+        newLimit.setActive(true);
 
         limitRepository.save(newLimit);
     }
