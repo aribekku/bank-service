@@ -8,6 +8,7 @@ CREATE TABLE limits
     "limit_balance"             NUMERIC             NOT NULL,
     "currency_short_name"       VARCHAR(5)          NOT NULL,
     "expense_category"          VARCHAR(15)         NOT NULL,
+    "active"                    BOOLEAN             NOT NULL,
 
     CONSTRAINT limits__pkey
         PRIMARY KEY (id)
