@@ -3,6 +3,7 @@ package application.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,17 +16,11 @@ public class MonthlyLimit extends BaseEntity {
 
     private LocalDateTime limitSettingDate;
 
-    private double limitAmount;
+    private BigDecimal limitAmount;
 
-    private double limitBalance;
+    private BigDecimal limitBalance;
 
     private String currencyShortName;
 
     private String expenseCategory;
-
-    @OneToOne
-    private Transaction transaction;
-
-    private boolean limitExceeded;
-
 }
