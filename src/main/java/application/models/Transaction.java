@@ -1,8 +1,11 @@
 package application.models;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.*;
+
+import java.math.BigDecimal;
 
 @Entity
 @Builder
@@ -18,6 +21,12 @@ public class Transaction extends BaseEntity {
 
     private String currencyShortName;
 
-    private double sum;
+    private BigDecimal sum;
 
+    private String expenseCategory;
+
+    @ManyToOne
+    private MonthlyLimit limit;
+
+    private boolean limitExceeded;
 }
