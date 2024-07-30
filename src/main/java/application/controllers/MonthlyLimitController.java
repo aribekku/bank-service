@@ -31,11 +31,4 @@ public class MonthlyLimitController {
     public ResponseEntity<?> getAll() {
         return ResponseEntity.ok(limitService.getAllLimits());
     }
-
-    @GetMapping("/set")
-    @Operation(summary = "Endpoint for getting only new limits that were set manually")
-    public ResponseEntity<?> getAllSetLimits() {
-        return ResponseEntity.ok(limitService.getAllSetLimits());
-    }
-
 }
