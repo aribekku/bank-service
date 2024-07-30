@@ -10,5 +10,5 @@ public interface TransactionService {
 
     List<Transaction> getAll();
     List<GetTransactionDTO> getTransactionsExceededLimit();
-    void save(CreateTransactionDTO transactionDTO);
+    void create(CreateTransactionDTO transactionDTO);
 }
