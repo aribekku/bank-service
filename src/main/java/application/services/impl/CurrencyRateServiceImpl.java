@@ -85,7 +85,7 @@ public class CurrencyRateServiceImpl implements CurrencyRateService {
             return rate;
 
         } catch (Exception exception) {
-            throw new JSONException(exception.getMessage());
+            throw new JSONException("Currency with " + currency + " shortname is not found");
         }
     }
 }
