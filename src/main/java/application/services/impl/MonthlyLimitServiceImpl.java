@@ -4,6 +4,7 @@ import application.DTO.SetNewLimitDTO;
 import application.models.MonthlyLimit;
 import application.repositories.MonthlyLimitRepository;
 import application.services.MonthlyLimitService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,12 @@ public class MonthlyLimitServiceImpl implements MonthlyLimitService {
     @Override
     public List<MonthlyLimit> getAllLimits() {
         return limitRepository.findAll();
+    }
+
+    @Override
+    public MonthlyLimit getActiveLimit(String expenseCategory) {
+        return limitRepository.findByExpenseCategoryAndActiveTrue(expenseCategory)
+                .orElseThrow(() -> new EntityNotFoundException("No limit found for category: " + expenseCategory));
     }
 
     @Override
@@ -50,7 +57,7 @@ public class MonthlyLimitServiceImpl implements MonthlyLimitService {
     }
 
     private void deactivateCurrentLimit(String expenseCategory) {
-        Optional<MonthlyLimit> activeLimitOpt = limitRepository.findByExpenseCategoryAndActive(expenseCategory, true);
+        Optional<MonthlyLimit> activeLimitOpt = limitRepository.findByExpenseCategoryAndActiveTrue(expenseCategory);
 
         activeLimitOpt.ifPresent(activeLimit -> {
             activeLimit.setActive(false);
