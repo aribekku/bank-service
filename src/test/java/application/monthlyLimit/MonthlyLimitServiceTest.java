@@ -2,21 +2,22 @@ package application.monthlyLimit;
 
 import application.DTO.SetNewLimitDTO;
 import application.models.MonthlyLimit;
-import application.models.Transaction;
 import application.repositories.MonthlyLimitRepository;
 import application.services.impl.MonthlyLimitServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 
@@ -25,91 +26,76 @@ public class MonthlyLimitServiceTest {
 
     @Mock
     private MonthlyLimitRepository limitRepository;
-
     @InjectMocks
     private MonthlyLimitServiceImpl limitService;
-
-    private MonthlyLimit previousLimit;
+    private SetNewLimitDTO validNewLimitDTO;
+    private MonthlyLimit currentLimit;
+    private MonthlyLimit limitOne;
+    private MonthlyLimit limitTwo;
 
     @BeforeEach
     void setup() {
-        Transaction transaction = new Transaction(
-                                        1000000123L,
-                                          9999999999L,
-                                    "KZT",
-                                              50000.0);
+        validNewLimitDTO = new SetNewLimitDTO();
+        validNewLimitDTO.setLimit(new BigDecimal("2000"));
+        validNewLimitDTO.setExpenseCategory("product");
 
-        previousLimit = new MonthlyLimit(LocalDateTime.parse(
-                                                            "2024-04-19T00:00:00"),
-                                                            1000.0,
-                                                            1000.0,
-                                                            "USD",
-                                                            "product",
-                                                            transaction,
-                                                            false);
+        currentLimit = new MonthlyLimit();
+        currentLimit.setLimitSettingDate(LocalDateTime.now().minusDays(30));
+        currentLimit.setLimitAmount(new BigDecimal("1000"));
+        currentLimit.setLimitBalance(new BigDecimal("500"));
+        currentLimit.setExpenseCategory("product");
+        currentLimit.setActive(true);
+
+        limitOne = new MonthlyLimit();
+        limitOne.setLimitSettingDate(LocalDateTime.now().minusDays(10));
+        limitOne.setLimitAmount(new BigDecimal("1000"));
+        limitOne.setLimitBalance(new BigDecimal("1000"));
+        limitOne.setCurrencyShortName("USD");
+        limitOne.setExpenseCategory("product");
+        limitOne.setActive(true);
+
+        limitTwo = new MonthlyLimit();
+        limitTwo.setLimitSettingDate(LocalDateTime.now().minusDays(20));
+        limitTwo.setLimitAmount(new BigDecimal("2000"));
+        limitTwo.setLimitBalance(new BigDecimal("2000"));
+        limitTwo.setCurrencyShortName("USD");
+        limitTwo.setExpenseCategory("service");
+        limitTwo.setActive(false);
     }
 
     @Test
-    void set_new_limit_test() {
-        SetNewLimitDTO newLimitDTO = new SetNewLimitDTO(1200.0, "product");
-        Mockito.when(limitRepository.findFirstByExpenseCategoryOrderByCreatedDesc(newLimitDTO.getExpenseCategory())).thenReturn(previousLimit);
+    void test_setNewLimit_withValidDTO() {
+        Mockito.when(limitRepository.findByExpenseCategoryAndActive("product", true)).thenReturn(Optional.of(currentLimit));
 
-        ArgumentCaptor<MonthlyLimit> limitCaptor = ArgumentCaptor.forClass(MonthlyLimit.class);
+        limitService.setNewLimit(validNewLimitDTO);
 
-        limitService.setNewLimit(newLimitDTO);
+        verify(limitRepository, times(1)).save(currentLimit);
+        Assertions.assertFalse(currentLimit.isActive());
 
-        verify(limitRepository, Mockito.times(1)).save(limitCaptor.capture());
-
-        MonthlyLimit capturedLimit = limitCaptor.getValue();
-
-        Assertions.assertEquals(1200.0, capturedLimit.getLimitAmount());
-        Assertions.assertEquals("product", capturedLimit.getExpenseCategory());
+        verify(limitRepository, times(2)).save(any(MonthlyLimit.class));
     }
 
     @Test
-    void get_all_test() {
-        List<MonthlyLimit> mockLimits = getMockLimits();
+    public void testSetNewLimit_withInvalidDTO() {
+        SetNewLimitDTO invalidDTO = new SetNewLimitDTO();
+        invalidDTO.setLimit(BigDecimal.ZERO);
 
-        when(limitRepository.findAll()).thenReturn(mockLimits);
+        IllegalArgumentException exception = Assertions
+                .assertThrows(IllegalArgumentException.class, () -> limitService.setNewLimit(invalidDTO));
 
-        List<MonthlyLimit> result = limitService.getAllLimits();
-
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(mockLimits, result);
+        Assertions.assertEquals("Limit amount must be positive.", exception.getMessage());
+        verify(limitRepository, times(0)).save(any(MonthlyLimit.class));
     }
 
-    private List<MonthlyLimit> getMockLimits() {
-        Transaction transactionOne = new Transaction(
-                1234567890L,
-                9999999999L,
-                "KZT",
-                50000.0);
+    @Test
+    public void testGetAllLimits() {
+        List<MonthlyLimit> expectedLimits = Arrays.asList(limitOne, limitTwo);
+        when(limitRepository.findAll()).thenReturn(expectedLimits);
 
-        MonthlyLimit limitOne = new MonthlyLimit(LocalDateTime.parse(
-                "2024-04-19T00:00:00"),
-                1000.0,
-                888.18,
-                "USD",
-                "product",
-                transactionOne,
-                false);
+        List<MonthlyLimit> actualLimits = limitService.getAllLimits();
 
-        Transaction transactionTwo = new Transaction(
-                1234567890L,
-                9999999999L,
-                "KZT",
-                70000.0);
-
-        MonthlyLimit limitTwo = new MonthlyLimit(LocalDateTime.parse(
-                "2024-04-20T00:00:00"),
-                1000.0,
-                731.63,
-                "USD",
-                "product",
-                transactionTwo,
-                false);
-
-        return List.of(limitOne, limitTwo);
+        Assertions.assertEquals(expectedLimits, actualLimits);
+        verify(limitRepository, times(1)).findAll();
     }
 
 }
