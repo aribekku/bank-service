@@ -30,14 +30,14 @@ public class MonthlyLimitServiceImpl implements MonthlyLimitService {
             throw new IllegalArgumentException("Limit amount must be positive.");
         }
 
-        String expenseCategory = newLimitDTO.getExpenseCategory();
-        Optional<MonthlyLimit> activeLimitOpt = limitRepository.findByExpenseCategoryAndActive(expenseCategory, true);
+        deactivateCurrentLimit(newLimitDTO.getExpenseCategory());
 
-        activeLimitOpt.ifPresent(activeLimit -> {
-            activeLimit.setActive(false);
-            limitRepository.save(activeLimit);
-        });
+        MonthlyLimit newLimit = createNewLimit(newLimitDTO);
 
+        limitRepository.save(newLimit);
+    }
+
+    private MonthlyLimit createNewLimit(SetNewLimitDTO newLimitDTO) {
         MonthlyLimit newLimit = new MonthlyLimit();
         newLimit.setLimitSettingDate(LocalDateTime.now());
         newLimit.setLimitAmount(newLimitDTO.getLimit());
@@ -46,6 +46,15 @@ public class MonthlyLimitServiceImpl implements MonthlyLimitService {
         newLimit.setExpenseCategory(newLimitDTO.getExpenseCategory());
         newLimit.setActive(true);
 
-        limitRepository.save(newLimit);
+        return newLimit;
+    }
+
+    private void deactivateCurrentLimit(String expenseCategory) {
+        Optional<MonthlyLimit> activeLimitOpt = limitRepository.findByExpenseCategoryAndActive(expenseCategory, true);
+
+        activeLimitOpt.ifPresent(activeLimit -> {
+            activeLimit.setActive(false);
+            limitRepository.save(activeLimit);
+        });
     }
 }
