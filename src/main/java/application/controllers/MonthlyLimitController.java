@@ -31,4 +31,10 @@ public class MonthlyLimitController {
     public ResponseEntity<?> getAll() {
         return ResponseEntity.ok(limitService.getAllLimits());
     }
+
+    @GetMapping("/active")
+    @Operation(summary = "Endpoint for getting current active limit from database")
+    public ResponseEntity<?> getActiveLimit(@RequestParam String expenseCategory) {
+        return ResponseEntity.ok(limitService.getActiveLimit(expenseCategory));
+    }
 }
