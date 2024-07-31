@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -84,8 +85,12 @@ public class CurrencyRateServiceImpl implements CurrencyRateService {
 
             return rate;
 
+        } catch (IOException exception) {
+            throw new RuntimeException("Failed to fetch currency rate due to network error");
+        } catch (JSONException exception) {
+            throw new RuntimeException("Failed to parse " + currency + " currency rate response");
         } catch (Exception exception) {
-            throw new JSONException("Currency with " + currency + " shortname is not found");
+            throw new RuntimeException("An unexpected error occurred while fetching currency rate");
         }
     }
 }
