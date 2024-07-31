@@ -65,7 +65,7 @@ public class MonthlyLimitServiceTest {
 
     @Test
     void test_setNewLimit_withValidDTO() {
-        Mockito.when(limitRepository.findByExpenseCategoryAndActive("product", true)).thenReturn(Optional.of(currentLimit));
+        Mockito.when(limitRepository.findByExpenseCategoryAndActiveTrue("product")).thenReturn(Optional.of(currentLimit));
 
         limitService.setNewLimit(validNewLimitDTO);
 

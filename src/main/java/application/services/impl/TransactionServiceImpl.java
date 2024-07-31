@@ -66,7 +66,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         BigDecimal rate = getCurrencyRate(transactionDTO.getCurrencyShortName());
 
-        Optional<MonthlyLimit> previousLimit = limitRepository.findByExpenseCategoryAndActive(transactionDTO.getExpenseCategory(), true);
+        Optional<MonthlyLimit> previousLimit = limitRepository.findByExpenseCategoryAndActiveTrue(transactionDTO.getExpenseCategory());
         MonthlyLimit limit = createLimit(transactionDTO, previousLimit, rate);
 
         transaction.setLimit(limit);

@@ -113,7 +113,7 @@ public class TransactionServiceTest {
     @Test
     public void test_Create_Transaction_ExceedsLimit() {
         when(currencyRateService.getCurrencyRate("KZT")).thenReturn(new BigDecimal(475));
-        when(limitRepository.findByExpenseCategoryAndActive("product", true)).thenReturn(Optional.of(limit));
+        when(limitRepository.findByExpenseCategoryAndActiveTrue("product")).thenReturn(Optional.of(limit));
 
         transactionService.create(createTransactionDTO);
 
@@ -127,7 +127,7 @@ public class TransactionServiceTest {
     @Test
     public void test_Create_Transaction_DoesNot_ExceedLimit() {
         when(currencyRateService.getCurrencyRate("KZT")).thenReturn(new BigDecimal(475));
-        when(limitRepository.findByExpenseCategoryAndActive("product", true)).thenReturn(Optional.of(limit));
+        when(limitRepository.findByExpenseCategoryAndActiveTrue("product")).thenReturn(Optional.of(limit));
 
         limit.setLimitBalance(new BigDecimal(1500));
 
